@@ -89,6 +89,26 @@ func (r *Result) Scan(dest ...interface{}) error {
 	return err
 }
 
+//Scan copies the columns in the current row into the values pointed at by dest.
+func ScanDrew(row []interface{}, dest ...interface{}) error {
+	for _, d := range dest {
+		if !isPointer(d) {
+			return errors.New("Destination not a pointer.")
+		}
+	}
+
+	//if len(dest) == 1 {
+	//	if s := asStructPointer(dest[0]); s != nil {
+	//		return r.scanStruct(s)
+	//	}
+	//}
+	err := assignValues(row, dest)
+	//if err == nil {
+	//	r.scanCount = len(dest)
+	//}
+	return err
+}
+
 //Must Scan exactly cnt number of values from result.
 //Useful when scanning into structure, to know whether are all expected fields filled with values.
 //cnt - number of values assigned to fields

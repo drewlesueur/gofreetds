@@ -289,6 +289,18 @@ func (conn *Conn) Exec(sql string) ([]*Result, error) {
 	return results, err
 }
 
+func (conn *Conn) ExecDrew(sql string, process func(int, int, []interface{}) error) ([]*Result, error) {
+	results, err := conn.execDrew(sql, process)
+	if err != nil && (conn.isDead() || conn.isMirrorSlave()) {
+		if err := conn.reconnect(); err != nil {
+			return nil, err
+		}
+		results, err = conn.execDrew(sql, process)
+
+	}
+	return results, err
+}
+
 //Reconnect to the database, cleaning closing the existing connection
 //and switching to a Mirror Database if necessary.
 func (conn *Conn) reconnect() error {
@@ -343,6 +355,21 @@ func (conn *Conn) exec(sql string) ([]*Result, error) {
 		return nil, conn.raiseError("dbsqlexec failed")
 	}
 	return conn.fetchResults()
+}
+
+func (conn *Conn) execDrew(sql string, process func(int, int, []interface{}) error) ([]*Result, error) {
+	conn.clearMessages()
+
+	cmd := C.CString(sql)
+	defer C.free(unsafe.Pointer(cmd))
+
+	if C.dbcmd(conn.dbproc, cmd) == C.FAIL {
+		return nil, conn.raiseError("dbcmd failed")
+	}
+	if C.dbsqlexec(conn.dbproc) == C.FAIL {
+		return nil, conn.raiseError("dbsqlexec failed")
+	}
+	return conn.fetchResultsDrew(process)
 }
 
 func (conn *Conn) isDead() bool {
