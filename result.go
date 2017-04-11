@@ -97,15 +97,8 @@ func ScanDrew(row []interface{}, dest ...interface{}) error {
 		}
 	}
 
-	//if len(dest) == 1 {
-	//	if s := asStructPointer(dest[0]); s != nil {
-	//		return r.scanStruct(s)
-	//	}
-	//}
 	err := assignValues(row, dest)
-	//if err == nil {
-	//	r.scanCount = len(dest)
-	//}
+
 	return err
 }
 

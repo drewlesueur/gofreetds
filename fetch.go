@@ -161,12 +161,13 @@ func (conn *Conn) fetchResultsDrew(process func(int, int, []interface{}) error) 
 			}
 			bindTyp, typ := dbbindtype(typ)
 			result.addColumn(name, int(size), int(typ))
-			if bindTyp == C.NTBSTRINGBIND && C.SYBCHAR != typ && C.SYBTEXT != typ {
+			if bindTyp == C.NTBSTRINGBIND && C.SYBCHAR != typ && C.SYBTEXT != typ && XSYBXML != typ {
 				size = C.DBINT(C.dbwillconvert(typ, C.SYBCHAR))
 			}
 			col := &columns[i]
 			// detecting varchar(max) or varbinary(max) types
 			col.canVary = (size == 2147483647 && typ == SYBCHAR) ||
+				(size == 2147483647 && typ == XSYBXML) ||
 				(size == 1073741823 && typ == SYBBINARY)
 			col.name = name
 			col.typ = int(typ)
@@ -188,13 +189,17 @@ func (conn *Conn) fetchResultsDrew(process func(int, int, []interface{}) error) 
 			}
 		}
 
+	rows_loop:
 		for i := 0; ; i++ {
-			rowDrew := []interface{}{}
-			rowCode := C.dbnextrow(conn.dbproc)
-			if rowCode == C.NO_MORE_ROWS {
-				break
-			}
-			if rowCode == C.REG_ROW {
+			switch C.dbnextrow(conn.dbproc) {
+			case C.NO_MORE_ROWS:
+				break rows_loop
+			case C.BUF_FULL:
+				return nil, errors.New("dbnextrow failed: Buffer Full")
+			case C.FAIL:
+				return nil, errors.New("dbnextrow failed: Failure")
+			case C.REG_ROW:
+				rowDrew := []interface{}{}
 				for j := 0; j < cols; j++ {
 					col := columns[j]
 					//fmt.Printf("col: %#v\nvalue:%s\n", col, col.Value())
@@ -232,11 +237,12 @@ func (conn *Conn) fetchResultsDrew(process func(int, int, []interface{}) error) 
 					rowDrew = append(rowDrew, col.Value())
 					//result.addValue(i, j, col.Value())
 				}
-			}
-
-			err := process(setIndex, i, rowDrew)
-			if err != nil {
-				// break ? is breaking safe?
+				err := process(setIndex, i, rowDrew)
+				if err != nil {
+					// break ? is breaking safe?
+				}
+			default:
+				// Continue looping
 			}
 		}
 
@@ -254,7 +260,6 @@ func (conn *Conn) fetchResultsDrew(process func(int, int, []interface{}) error) 
 		return results, conn.raise(nil)
 	}
 	return results, nil
-
 }
 
 type column struct {
