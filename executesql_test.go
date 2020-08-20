@@ -82,6 +82,7 @@ func TestGoTo2SqlDataType(t *testing.T) {
 	checker([]byte{1, 2, 3, 4, 5, 6, 7, 8}, "varbinary (8)", "0x0102030405060708")
 
 	checker("", "nvarchar (1)", "''")
+	checker(nil, "nvarchar (1)", "NULL")
 	checker(true, "bit", "1")
 	checker(false, "bit", "0")
 }

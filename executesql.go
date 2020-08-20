@@ -114,6 +114,8 @@ func go2SqlDataType(value interface{}) (string, string, error) {
 
 	strValue := fmt.Sprintf("%v", value)
 	switch t := value.(type) {
+	case nil:
+		return "nvarchar (1)", "NULL", nil
 	case bool:
 		bitStrValue := "0"
 		if strValue == "true" {
