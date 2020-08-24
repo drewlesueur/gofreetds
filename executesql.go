@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"log"
+	"database/sql"
 )
 
 const statusRow string = `;
@@ -33,6 +35,9 @@ func (conn *Conn) ExecuteSql(query string, params ...driver.Value) ([]*Result, e
 		return nil, err
 	}
 
+	log.Printf("========paramDef: %s", paramDef)
+	log.Printf("========paramVal: %s", paramVal)
+
 	statement += statusRow
 
 	sql := fmt.Sprintf("exec sp_executesql N'%s', N'%s', %s", statement, paramDef, paramVal)
@@ -40,6 +45,7 @@ func (conn *Conn) ExecuteSql(query string, params ...driver.Value) ([]*Result, e
 	if numParams == 0 {
 		sql = fmt.Sprintf("exec sp_executesql N'%s'", statement)
 	}
+	log.Printf("=====full sql: %s", sql)
 	return conn.Exec(sql)
 }
 
@@ -110,6 +116,150 @@ func go2SqlDataType(value interface{}) (string, string, error) {
 			return a
 		}
 		return b
+	}
+
+	isSQLType := true
+	switch t := value.(type) {
+	case sql.NullBool:
+		if t.Valid {
+			value = t.Bool	
+			break
+		} else {
+			return "bit", "NULL", nil
+		}
+	case sql.NullFloat64:
+		if t.Valid {
+			value = t.Float64	
+			break
+		} else {
+			return "real", "NULL", nil
+		}
+	case sql.NullInt32:
+		if t.Valid {
+			value = t.Int32	
+			break
+		} else {
+			return "int", "NULL", nil
+		}
+	case sql.NullInt64:
+		if t.Valid {
+			value = t.Int64
+			break
+		} else {
+			return "bigint", "NULL", nil
+		}
+	case sql.NullString:
+		if t.Valid {
+			value = t.String
+			break
+		} else {
+			return "nvarchar (1)", "NULL", nil
+		}
+	case sql.NullTime:
+		if t.Valid {
+			value = t.Time
+			break
+		} else {
+			return "datetimeoffset", "NULL", nil
+		}
+	default:
+		isSQLType = false	
+	}
+
+	if !isSQLType {
+		switch t := value.(type) {
+		case *bool:
+			if t == nil {
+				return "bit", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *uint8:
+			if t == nil {
+				return "tinyint", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *int8:
+			if t == nil {
+				return "tinyint", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *uint16:
+			if t == nil {
+				return "smallint", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *int16:
+			if t == nil {
+				return "smallint", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *uint32:
+			if t == nil {
+				return "int", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *int32:
+			if t == nil {
+				return "int", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *int:
+			if t == nil {
+				return "int", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *uint64:
+			if t == nil {
+				return "bigint", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *int64:
+			if t == nil {
+				return "bigint", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *float32:
+			if t == nil {
+				return "real", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *float64:
+			if t == nil {
+				return "real", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *string:
+			if t == nil {
+				return "nvarchar (1)", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *time.Time:
+			if t == nil {
+				return "datetimeoffset", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		case *[]byte:
+			if t == nil {
+				return "varbinary (1)", "NULL", nil	
+			} else {
+				value = *t	
+			}
+		}
+	
 	}
 
 	strValue := fmt.Sprintf("%v", value)

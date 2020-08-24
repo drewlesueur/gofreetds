@@ -637,20 +637,89 @@ func TestTypes(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+type Unknown1 struct {}
+
 func TestUnknownDataTypeInExecuteSql(t *testing.T) {
 	c := ConnectToTestDb(t)
-	if c.sybaseMode125() {
-		t.Skip("Sybase 12.5 doesn't have sp_executesql")
-	}
-	var str *string
-	_, err := c.ExecuteSql("update dbo.freetds_types set nvarchar_max=? where int = 3", str)
+	var u *Unknown1
+	_, err := c.ExecuteSql("update dbo.freetds_types set nvarchar_max=? where int = 3", u)
 	assert.NotNil(t, err)
-	assert.EqualError(t, err, "unknown dataType *string")
+	assert.EqualError(t, err, "unknown dataType *freetds.Unknown1")
+}
 
-	var l *int
-	_, err = c.ExecuteSql("update dbo.freetds_types set long=? where int = 3", l)
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, "unknown dataType *int")
+func TestNullInserts(t *testing.T) {
+	c := ConnectToTestDb(t)
+	_, err := c.ExecuteSql(`
+		insert into freetds_types (
+			int,
+			long,
+			smallint,
+			tinyint,
+			varchar,
+			nvarchar,
+			char,
+			nchar,
+			text,
+			ntext,
+			datetime,
+			smalldatetime,
+			money,
+			smallmoney,
+			real,
+			float,
+			bit,
+			-- We cannot insert NULL for timestamp, bindary, and varbinary_max
+			-- timestamp,
+			-- binary,
+			nvarchar_max,
+			varchar_max
+			-- varbinary_max
+		) values (
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?
+		)
+	`,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	assert.Nil(t, err)
+
+
+	//_, err := db.ExecuteSql(`select * from freetds_types where int IS NULL`)
 }
 
 // Also run with "go test --race" for race condition checking.
