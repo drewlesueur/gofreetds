@@ -261,7 +261,7 @@ insert into freetds_types (
      real,
      float,
      bit,
-     -- We cannot insert NULL for timestamp, bindary, and varbinary_max
+     -- We cannot insert NULL for timestamp, binary, and varbinary_max
      -- timestamp,
      -- binary,
      nvarchar_max,
@@ -351,6 +351,69 @@ func TestSQLNullInserts(t *testing.T) {
 	assertRowNil(t, rows)
 }
 
+func TestTypedNilNullInserts(t *testing.T) {
+	db, _, _ := open(t)
+	defer db.Close()
+
+	// First clear out the nil one(s)
+	_, err := db.Exec(`delete from freetds_types where int is null`)
+	assert.Nil(t, err)
+
+	var (
+		myInt           *int32
+		myLong          *int64
+		mySmallInt      *int16
+		myTinyInt       *int8
+		myNumeric       *float64
+		myVarchar       *string
+		myNVarchar      *string
+		myChar          *byte
+		myNChar         *[]byte
+		myText          *string
+		myNText         *string
+		myDateTime      *time.Time
+		mySmallDateTime *time.Time
+		myMoney         *float64
+		mySmallMoney    *float64
+		myReal          *float64
+		myFloat         *float64
+		myBit           *bool
+		myNVarcharMax   *string
+		myVarcharMax    *string
+	)
+	// Because sybase 12.5 does not allow null bit, making it non-null to resort to lowest common denominator.
+	myTrue := true
+	myBit = &myTrue
+	_, err = db.Exec(insertQuery,
+		myInt,
+		myLong,
+		mySmallInt,
+		myTinyInt,
+		myNumeric,
+		myVarchar,
+		myNVarchar,
+		myChar,
+		myNChar,
+		myText,
+		myNText,
+		myDateTime,
+		mySmallDateTime,
+		myMoney,
+		mySmallMoney,
+		myReal,
+		myFloat,
+		myBit,
+		myNVarcharMax,
+		myVarcharMax,
+	)
+	assert.Nil(t, err)
+
+	rows, err := db.Query("select * from freetds_types where int is null")
+	defer rows.Close()
+	assert.Nil(t, err)
+	assertRowNil(t, rows)
+}
+
 func assertRowNil(t *testing.T, rows *sql.Rows) {
 	rowCount := 0
 	for rows.Next() {
@@ -378,7 +441,7 @@ func assertRowNil(t *testing.T, rows *sql.Rows) {
 			myBinary        *[]byte
 			myNVarcharMax   *string
 			myVarcharMax    *string
-			myVarBindaryMax *string
+			myVarBinaryMax  *string
 		)
 
 		err := rows.Scan(
@@ -404,7 +467,7 @@ func assertRowNil(t *testing.T, rows *sql.Rows) {
 			&myBinary,
 			&myNVarcharMax,
 			&myVarcharMax,
-			&myVarBindaryMax,
+			&myVarBinaryMax,
 		)
 		assert.Nil(t, err)
 
@@ -429,7 +492,7 @@ func assertRowNil(t *testing.T, rows *sql.Rows) {
 		assert.Nil(t, myBinary)
 		assert.Nil(t, myNVarcharMax)
 		assert.Nil(t, myVarcharMax)
-		assert.Nil(t, myVarBindaryMax)
+		assert.Nil(t, myVarBinaryMax)
 		assert.Nil(t, err)
 	}
 
