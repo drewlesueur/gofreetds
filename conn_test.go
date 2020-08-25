@@ -21,6 +21,7 @@ create table freetds_types (
   long bigint null,
   smallint smallint null,
   tinyint tinyint null,
+  numeric numeric(5,3) null,
   varchar varchar(255) COLLATE latin1_general_ci_as null ,
   nvarchar nvarchar(255) COLLATE latin1_general_ci_as null,
   char char(255) COLLATE latin1_general_ci_as null,
@@ -42,11 +43,11 @@ create table freetds_types (
 )
 ;
 
-insert into freetds_types (int, long, smallint, tinyint, varchar, nvarchar, char, nchar, text, ntext, datetime, smalldatetime, money, smallmoney, real, float, bit, binary)
-values (2147483647,   9223372036854775807, 32767, 255, 'išo medo u dućan   ',N'išo medo u dućan    2','išo medo u dućan    3',N'išo medo u dućan    4','išo medo u dućan    5',N'išo medo u dućan    6', '1972-08-08T10:11:12','1972-08-08T10:11:12', 1234.5678,   1234.5678,  1234.5678,  1234.5678, 0, 0x123567890)
+insert into freetds_types (int, long, smallint, tinyint, numeric, varchar, nvarchar, char, nchar, text, ntext, datetime, smalldatetime, money, smallmoney, real, float, bit, binary)
+values (2147483647,   9223372036854775807, 32767, 255, 99.999, 'išo medo u dućan   ',N'išo medo u dućan    2','išo medo u dućan    3',N'išo medo u dućan    4','išo medo u dućan    5',N'išo medo u dućan    6', '1972-08-08T10:11:12','1972-08-08T10:11:12', 1234.5678,   1234.5678,  1234.5678,  1234.5678, 0, 0x123567890)
 
-insert into freetds_types (int, long, smallint, tinyint, varchar, nvarchar, char, nchar, text, ntext, datetime, smalldatetime, money, smallmoney, real, float, bit, binary)
-values (-2147483648, -9223372036854775808, -32768,  0, 'nije reko dobar dan',N'nije reko dobar dan 2','nije reko dobar dan 3',N'nije reko dobar dan 4','nije reko dobar dan 5',N'nije reko dobar dan 6', '1998-10-10T16:17:18','1998-10-10T16:17:18', -1234.5678, -1234.5678, -1234.5678, -1234.5678, 1, 0x0987654321abcd)
+insert into freetds_types (int, long, smallint, tinyint, numeric, varchar, nvarchar, char, nchar, text, ntext, datetime, smalldatetime, money, smallmoney, real, float, bit, binary)
+values (-2147483648, -9223372036854775808, -32768,  0, -99.999, 'nije reko dobar dan',N'nije reko dobar dan 2','nije reko dobar dan 3',N'nije reko dobar dan 4','nije reko dobar dan 5',N'nije reko dobar dan 6', '1998-10-10T16:17:18','1998-10-10T16:17:18', -1234.5678, -1234.5678, -1234.5678, -1234.5678, 1, 0x0987654321abcd)
 
 insert into freetds_types (int) values (3)
 `, `
@@ -74,6 +75,7 @@ create table freetds_types (
   long decimal(19,0) null,
   smallint smallint null,
   tinyint tinyint null,
+  numeric numeric(5,3) null,
   varchar varchar(255) null ,
   nvarchar nvarchar(255) null,
   char char(255) null,
@@ -95,11 +97,11 @@ create table freetds_types (
 )
 
 
-insert into freetds_types (int, long, smallint, tinyint, varchar, nvarchar, char, nchar, text, ntext, datetime, smalldatetime, money, smallmoney, real, float, bit, binary)
-values (2147483647,   9223372036854775807, 32767, 255, 'išo medo u dućan   ',N'išo medo u dućan    2','išo medo u dućan    3',N'išo medo u dućan    4','išo medo u dućan    5',N'išo medo u dućan    6', '1972-08-08 10:11:12','1972-08-08 10:11:12', 1234.5678,   1234.5678,  1234.5678,  1234.5678, 0, 0x123567890)
+insert into freetds_types (int, long, smallint, tinyint, numeric, varchar, nvarchar, char, nchar, text, ntext, datetime, smalldatetime, money, smallmoney, real, float, bit, binary)
+values (2147483647,   9223372036854775807, 32767, 255, 99.999, 'išo medo u dućan   ',N'išo medo u dućan    2','išo medo u dućan    3',N'išo medo u dućan    4','išo medo u dućan    5',N'išo medo u dućan    6', '1972-08-08 10:11:12','1972-08-08 10:11:12', 1234.5678,   1234.5678,  1234.5678,  1234.5678, 0, 0x123567890)
 
-insert into freetds_types (int, long, smallint, tinyint, varchar, nvarchar, char, nchar, text, ntext, datetime, smalldatetime, money, smallmoney, real, float, bit, binary)
-values (-2147483648, -9223372036854775808, -32768,  0, 'nije reko dobar dan',N'nije reko dobar dan 2','nije reko dobar dan 3',N'nije reko dobar dan 4','nije reko dobar dan 5',N'nije reko dobar dan 6', '1998-10-10 16:17:18','1998-10-10 16:17:18', -1234.5678, -1234.5678, -1234.5678, -1234.5678, 1, 0x0987654321abcd)
+insert into freetds_types (int, long, smallint, tinyint, numeric, varchar, nvarchar, char, nchar, text, ntext, datetime, smalldatetime, money, smallmoney, real, float, bit, binary)
+values (-2147483648, -9223372036854775808, -32768,  0, -99.999, 'nije reko dobar dan',N'nije reko dobar dan 2','nije reko dobar dan 3',N'nije reko dobar dan 4','nije reko dobar dan 5',N'nije reko dobar dan 6', '1998-10-10 16:17:18','1998-10-10 16:17:18', -1234.5678, -1234.5678, -1234.5678, -1234.5678, 1, 0x0987654321abcd)
 
 insert into freetds_types (int, bit) values (3, 0)
 `, `

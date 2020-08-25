@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -43,7 +44,6 @@ func TestMssqlConnOpenSybase125(t *testing.T) {
 	assert.IsType(t, &MssqlConn{}, c)
 	c.Close()
 }
-
 
 func TestGoSqlDbQueryRow(t *testing.T) {
 	db, err, _ := open(t)
@@ -239,4 +239,199 @@ func TestBlobs(t *testing.T) {
 	strGot = fmt.Sprintf("%x", got)
 	assert.Equal(t, strWant, strGot)
 	assert.Equal(t, want, got)
+}
+
+var insertQuery = `
+insert into freetds_types (
+     int,
+     long,
+     smallint,
+     tinyint,
+     numeric,
+     varchar,
+     nvarchar,
+     char,
+     nchar,
+     text,
+     ntext,
+     datetime,
+     smalldatetime,
+     money,
+     smallmoney,
+     real,
+     float,
+     bit,
+     -- We cannot insert NULL for timestamp, bindary, and varbinary_max
+     -- timestamp,
+     -- binary,
+     nvarchar_max,
+     varchar_max
+     -- varbinary_max
+) values (
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?,
+     ?
+)
+`
+
+func TestNullInserts(t *testing.T) {
+	db, _, _ := open(t)
+	defer db.Close()
+
+	// First clear out the nil one(s)
+	_, err := db.Exec(`delete from freetds_types where int is null`)
+	assert.Nil(t, err)
+
+	_, err = db.Exec(insertQuery, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+		// Because sybase 12.5 does not allow null bit, making it non-null to resort to lowest common denominator.
+		true,
+		nil, nil)
+	assert.Nil(t, err)
+
+	rows, err := db.Query("select * from freetds_types where int is null")
+	defer rows.Close()
+	assert.Nil(t, err)
+	assertRowNil(t, rows)
+}
+
+func TestSQLNullInserts(t *testing.T) {
+	db, _, _ := open(t)
+	defer db.Close()
+
+	// First clear out the nil one(s)
+	_, err := db.Exec(`delete from freetds_types where int is null`)
+	assert.Nil(t, err)
+
+	_, err = db.Exec(insertQuery,
+		// sql.NullInt32{Valid: true, Int32: 100},
+		sql.NullInt32{},
+		sql.NullInt64{},
+		sql.NullInt32{},
+		sql.NullInt32{},
+		sql.NullFloat64{},
+		sql.NullString{},
+		sql.NullString{},
+		sql.NullString{},
+		sql.NullString{},
+		sql.NullString{},
+		sql.NullString{},
+		sql.NullTime{},
+		sql.NullTime{},
+		sql.NullFloat64{},
+		sql.NullFloat64{},
+		sql.NullFloat64{},
+		sql.NullFloat64{},
+		// Because sybase 12.5 does not allow null bit, making it non-null to resort to lowest common denominator.
+		sql.NullBool{Valid: true, Bool: true},
+		sql.NullString{},
+		sql.NullString{},
+	)
+	assert.Nil(t, err)
+
+	rows, err := db.Query("select * from freetds_types where int is null")
+	defer rows.Close()
+	assert.Nil(t, err)
+	assertRowNil(t, rows)
+}
+
+func assertRowNil(t *testing.T, rows *sql.Rows) {
+	rowCount := 0
+	for rows.Next() {
+		rowCount++
+		var (
+			myInt           *int32
+			myLong          *int64
+			mySmallInt      *int16
+			myTinyInt       *int8
+			myNumeric       *float64
+			myVarchar       *string
+			myNVarchar      *string
+			myChar          *byte
+			myNChar         *[]byte
+			myText          *string
+			myNText         *string
+			myDateTime      *time.Time
+			mySmallDateTime *time.Time
+			myMoney         *float64
+			mySmallMoney    *float64
+			myReal          *float64
+			myFloat         *float64
+			myBit           *bool
+			myTimestamp     *[]byte
+			myBinary        *[]byte
+			myNVarcharMax   *string
+			myVarcharMax    *string
+			myVarBindaryMax *string
+		)
+
+		err := rows.Scan(
+			&myInt,
+			&myLong,
+			&mySmallInt,
+			&myTinyInt,
+			&myNumeric,
+			&myVarchar,
+			&myNVarchar,
+			&myChar,
+			&myNChar,
+			&myText,
+			&myNText,
+			&myDateTime,
+			&mySmallDateTime,
+			&myMoney,
+			&mySmallMoney,
+			&myReal,
+			&myFloat,
+			&myBit,
+			&myTimestamp,
+			&myBinary,
+			&myNVarcharMax,
+			&myVarcharMax,
+			&myVarBindaryMax,
+		)
+		assert.Nil(t, err)
+
+		assert.Nil(t, myInt)
+		assert.Nil(t, myLong)
+		assert.Nil(t, mySmallInt)
+		assert.Nil(t, myTinyInt)
+		assert.Nil(t, myNumeric)
+		assert.Nil(t, myVarchar)
+		assert.Nil(t, myChar)
+		assert.Nil(t, myNChar)
+		assert.Nil(t, myText)
+		assert.Nil(t, myNText)
+		assert.Nil(t, myDateTime)
+		assert.Nil(t, mySmallDateTime)
+		assert.Nil(t, myMoney)
+		assert.Nil(t, myReal)
+		assert.Nil(t, myFloat)
+		// Because sybase 12.5 does not allow null bit, we made it non-null to resort to lowest common denominator.
+		assert.True(t, *myBit)
+
+		assert.Nil(t, myBinary)
+		assert.Nil(t, myNVarcharMax)
+		assert.Nil(t, myVarcharMax)
+		assert.Nil(t, myVarBindaryMax)
+		assert.Nil(t, err)
+	}
+
+	assert.Equal(t, rowCount, 1)
 }
